@@ -29,11 +29,14 @@ If the JSON file is not specified, the quotes are read from `stdin`. For example
 
 Each quote in the JSON must have the following fields:
 
-* **`isin`**: the isin of the stock/fund. `isin` or `stockname` must be specified.
-* **`stockname`**: the name of the stock/fund. `isin` or `stockname` must be specified.
-* **`date`**: the datetime of the price in the `YYYY-MM-DDThh:mm:ssz` format. The field is mandatory. Example: `2020-09-11T00:00:00+02:00`
-* **`price`**: The value of the quote. The field is mandatory.
-* **`currency`**: The price currency. Default "EUR".
-* **`namespace`**: The namespace in which the isin/stockname must be search. Example: "FUND". If empty, all the namespace will be searched and the first match will be used. Default ""
+|Field      |Description|Note|
+|-----------|-----------|---|
+|`isin`     |isin of the stock/fund|`isin` or `stockname` must be specified|
+|`stockname`|name of the stock/fund|`isin` or `stockname` must be specified|
+|`date`     |datetime of the price in the `YYYY-MM-DDThh:mm:ssz` format. Example: `2020-09-11T00:00:00+02:00` |mandatory|       
+|`price`    |value of the quote|mandatory|
+|`currency` |price currency. Example: `"USD"`|default `"EUR"`|
+|`namespace`|namespace in which the `isin`/`stockname` must be search. Example: `"FUND"`. If empty, all the namespace will be searched and the first match will be used|default `""`|
+
 
 Other fields will be ignored.
