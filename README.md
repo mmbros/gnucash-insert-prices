@@ -30,7 +30,7 @@ For each quote in the JSON file it print out the operation performed: ADD, SKIP,
 
 In case of error, all the updates are discarded.
 
-If no error is found, the gnucash fil will be saved.
+If no error is found, the gnucash file will be saved.
 
 
 
