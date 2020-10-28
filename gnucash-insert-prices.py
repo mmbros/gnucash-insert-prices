@@ -117,13 +117,20 @@ def add_price(book, value, date, currency_str="EUR",
     #
     # exceptions: yessss
 
+    def string_has_content(s):
+        return (isinstance(s, str) and len(s)>0)
+
     PRICE_SOURCE_USER_PRICE = 2
     
     if book is None:
         raise ValueError('Book must not be None')
 
-    if (commodity_isin == "") & (commodity_fullname == ""):
+    has_isin = string_has_content(commodity_isin)
+    has_fullname = string_has_content(commodity_fullname)
+    if (not has_isin) and (not has_fullname):
         raise ValueError('Either isin or fullname of commodity is expected')
+
+    has_namespace = string_has_content(commodity_namespace)
 
     commodity_table = book.get_table()
 
@@ -134,16 +141,22 @@ def add_price(book, value, date, currency_str="EUR",
 
     commodity = None
     # get the commodity by isin (if defined)
-    if commodity_isin != "":
+    if has_isin:
         commodity = get_commodity_by_isin(commodity_table, commodity_isin, commodity_namespace)
         if commodity is None: 
-            raise LookupError("Commodity with ISIN \"{0}\" and Namespace \"{1}\" not found".format(commodity_isin, commodity_namespace))
+            if has_namespace:
+                raise LookupError("Commodity with isin=\"{0}\" and namespace=\"{1}\" not found".format(commodity_isin, commodity_namespace))
+            else:
+                raise LookupError("Commodity with isin=\"{0}\" not found".format(commodity_isin))
 
     # get the commodity by fullname (if needed)
     if commodity is None:
         commodity = get_commodity_by_fullname(commodity_table, commodity_fullname, commodity_namespace)
         if commodity is None: 
-            raise LookupError("Commodity with FullName \"{0}\" and Namespace \"{1}\" not found".format(commodity_fullname, commodity_namespace))
+            if has_namespace:
+                raise LookupError("Commodity with name=\"{0}\" and namespace=\"{1}\" not found".format(commodity_fullname, commodity_namespace))
+            else:
+                raise LookupError("Commodity with name=\"{0}\" not found".format(commodity_fullname))
     assert(commodity is not None)
 
     # check prise already exists
@@ -184,8 +197,8 @@ def do_insert_prices(book, quotes):
 
     for q in quotes:
         date = datetime.datetime.strptime(q["date"], '%Y-%m-%dT%H:%M:%S%z')
-        isin = q["isin"]
-        fullname = q.get("stockname")
+        isin = q.get("isin")
+        fullname = q.get("name")
         namespace_name = q.get("namespace", "")
         currency_str = q.get("currency", "EUR")
         price = q["price"]
@@ -240,11 +253,13 @@ def insert_prices(gnucash_file, json_file, tty_enabled=False):
         session = Session(gnucash_file, ignore_lock=False)
         errs = do_insert_prices(session.book, quotes)
         if errs == 0:
-            print("Non errors found")
+            print()
+            print("No errors found: Commit")
             session.save()
         else:
-            raise Exception("Found %d errors" % errs)
+            raise Exception("Found %d errors: Rollback" % errs)
     except Exception as err:
+        print()
         print("Error updating gnucash file: %s" % err)
     finally:
         if session != None:

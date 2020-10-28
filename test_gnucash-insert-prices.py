@@ -286,9 +286,9 @@ class TestGnucash(unittest.TestCase):
 
         def quote(iter):
             return {
-                "Date": datetime.datetime(2020,3,iter,  tzinfo=datetime.timezone.utc).isoformat(),
-                "Isin": get_commodity_isin(3),
-                "Price": 33.0 + iter/10.0,
+                "date": datetime.datetime(2020,3,iter,  tzinfo=datetime.timezone.utc).isoformat(),
+                "isin": get_commodity_isin(3),
+                "price": 33.0 + iter/10.0,
             }
 
         # create the list of quotes
@@ -338,7 +338,7 @@ class TestGnucashInsertPrices(unittest.TestCase):
 
         f = open(json_file, 'w+')
         f.write('[\n')
-        f.write('{"Isin": "ISIN00009999", "Date": "2020-09-10T00:00:00+02:00", "Price": 25.62},\n')
+        f.write('{"isin": "ISIN00009999", "date": "2020-09-10T00:00:00+02:00", "price": 25.62},\n')
         f.write('INVALID JSON LINE\n')
         f.write(']\n')
         f.close()
@@ -358,7 +358,7 @@ class TestGnucashInsertPrices(unittest.TestCase):
 
         f = open(json_file, 'w+')
         f.write('[\n')
-        f.write('{"Isin": "ISIN00000001", "Date": "2020-09-10T00:00:00+02:00", "Price": 12.34}\n')
+        f.write('{"isin": "ISIN00000001", "date": "2020-09-10T00:00:00+02:00", "price": 12.34}\n')
         f.write(']\n')
         f.close()
 
@@ -367,7 +367,7 @@ class TestGnucashInsertPrices(unittest.TestCase):
             self.assertRegex( fake_out.getvalue(), "Error updating gnucash file") 
 
 
-    def test_insert_prices_ok_json_from_stdin(self):
+    def test_insert_prices_json_from_stdin(self):
         gnucash_file = FILE_PREFIX + "4.gnucash"
         json_file = FILE_PREFIX + "4.json"
 
@@ -377,17 +377,27 @@ class TestGnucashInsertPrices(unittest.TestCase):
 
         f = open(json_file, 'w+')
         f.write('[\n')
-        f.write('{"Isin": "' + get_commodity_isin(1) + '", "Date": "2020-10-28T00:00:00+02:00", "Price": 25.62}\n')
+        f.write('{"isin": "' + get_commodity_isin(1) + '", "date": "2020-10-11T00:00:00+02:00", "price": 10.01},\n')
+        f.write('{"name": "' + get_commodity_fullname(2) + '", "date": "2020-10-12T00:00:00+02:00", "price": 20.02},\n')
+        f.write('{"isin": "' + get_commodity_isin(5) + '", "namespace": "TEST", "date": "2020-10-15T00:00:00+02:00", "price": 50.05},\n')
+        f.write('{"name": "' + get_commodity_fullname(6) + '", "date": "2020-10-16T00:00:00+02:00", "price": 60.06},\n')
+        f.write('{"isin": "' + get_commodity_isin(1) + '", "date": "2020-10-11T00:00:00+02:00", "price": 10.01},\n')
+        f.write('{"isin": "' + get_commodity_isin(1) + '", "date": "2020-10-11T00:00:00+02:00", "price": 10.99}\n')
         f.write(']\n')
         f.close()
 
-
+        output = ""
         with patch('sys.stdout', new = StringIO()) as fake_out: 
             sys.stdin = open(json_file, 'r')
             script.insert_prices(gnucash_file, None)
-            
-            self.assertRegex( fake_out.getvalue(), "ADD : \(commodity=TEST00000001, price=25.620 EUR, date=") 
-            # print(fake_out.getvalue())
+            output = fake_out.getvalue()
+        
+        self.assertRegex( output, "ADD : \(commodity=TEST00000001, price=10.010 EUR, date=") 
+    
+    
+
+        # print()
+        # print(output) 
 
 
     def test_insert_prices_no_json_from_stdin(self):
@@ -400,8 +410,8 @@ class TestGnucashInsertPrices(unittest.TestCase):
         with patch('sys.stdout', new = StringIO()) as fake_out: 
             script.insert_prices(gnucash_file, None)
             
-            self.assertRegex( fake_out.getvalue(), "Error: json expected from file or stdin") 
-            # print(fake_out.getvalue())
+            # self.assertRegex( fake_out.getvalue(), "Error: json expected from file or stdin") 
+            self.assertRegex( fake_out.getvalue(), "Error reading json file: Expecting value: line 1 column 1 \(char 0\)") 
 
 
 if __name__ == '__main__':
