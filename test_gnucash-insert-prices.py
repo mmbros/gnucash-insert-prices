@@ -283,20 +283,6 @@ class TestGnucash(unittest.TestCase):
         # print(cm.exception)
 
     def test_do_insert_prices(self):
-        # def do_insert_new_prices(book, quotes):
-        #     # Date: 2020-09-11T00:00:00+02:00
-        #     # Isin: 
-        #     # StockName:
-        #     # Price: 
-        #     # Currency: default "EUR"
-        #     # Namespace: default ""
-
-        # class quote:
-        #     def __init__(self, n, date, price):
-        #         self.Date = date
-        #         self.Isin = get_commodity_isin(n)
-        #         self.StockName = get_commodity_fullname(n)
-        #         self.Price = price
 
         def quote(iter):
             return {
@@ -317,6 +303,8 @@ class TestGnucash(unittest.TestCase):
             errs = script.do_insert_prices(self.book, quotes)
             self.assertEqual(errs, 0)
 
+
+class TestGnucashInsertPrices(unittest.TestCase):
 
     def test_insert_prices_err_gnucash_file_not_found(self):
         gnucash_file = FILE_PREFIX + "-UNKNOWN.gnucash"
@@ -400,6 +388,7 @@ class TestGnucash(unittest.TestCase):
             
             self.assertRegex( fake_out.getvalue(), "ADD : \(commodity=TEST00000001, price=25.620 EUR, date=") 
             # print(fake_out.getvalue())
+
 
     def test_insert_prices_no_json_from_stdin(self):
         gnucash_file = FILE_PREFIX + "5.gnucash"

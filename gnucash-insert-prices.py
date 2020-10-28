@@ -13,7 +13,7 @@ from functools import lru_cache
 import json 
 import sys
 from os.path import isfile
-from os import isatty
+# from os import isatty
 
 # <MONKEY-PATCH>
 # Monkey patch for GnuCash Python bindings 
@@ -168,6 +168,7 @@ def add_price(book, value, date, currency_str="EUR",
     # print("ADD (commodity={0}, price={1:.3f} {2}, date={3})".format(commodity_isin, value, currency_str, date))
     return commodity, True
 
+
 # try to insert the quotes and print the result of each operation
 # returns the number of errors
 def do_insert_prices(book, quotes):
@@ -182,12 +183,12 @@ def do_insert_prices(book, quotes):
     errors = 0
 
     for q in quotes:
-        date = datetime.datetime.strptime(q["Date"], '%Y-%m-%dT%H:%M:%S%z')
-        isin = q["Isin"]
-        namespace_name = q.get("Namespace", "")
-        currency_str = q.get("Currency", "EUR")
-        price = q["Price"]
-        fullname = q.get("StockName")
+        date = datetime.datetime.strptime(q["date"], '%Y-%m-%dT%H:%M:%S%z')
+        isin = q["isin"]
+        fullname = q.get("stockname")
+        namespace_name = q.get("namespace", "")
+        currency_str = q.get("currency", "EUR")
+        price = q["price"]
 
         try:
             c, added = add_price(
@@ -205,15 +206,15 @@ def do_insert_prices(book, quotes):
         
     return errors
 
-def insert_prices(gnucash_file, json_file):
+
+def insert_prices(gnucash_file, json_file, tty_enabled=False):
     
     if not isfile(gnucash_file):
         print("gnucash_file not found")
         return
 
     if json_file is None:
-
-        if isatty(sys.stdin.fileno()):
+        if (not tty_enabled) and sys.stdin.isatty():
             print("Error: json expected from file or stdin")
             return
         try:
@@ -260,14 +261,17 @@ def main_cmd():
     parser = argparse.ArgumentParser(description='Insert gnucash quote prices from a json file')
 
     # Add argument
-    parser.add_argument('gnucash_file', help="The gnucash file to be updated")  
-    parser.add_argument('-j', '--json_file', help="The json file with the new quotes")
+    parser.add_argument('gnucash_file', help="the gnucash file to be updated")  
+    parser.add_argument('-j', '--json_file', help="the json file containing the new quotes (default stdin)")
+    parser.add_argument( '--tty', dest="tty", action="store_true", help="enable an interactive json file stream")
+    # parser.add_argument( '--no-tty', dest="tty", action="store_false", help="disable an interactive json file stream")
+    parser.set_defaults(tty=False)
 
     # parse arguments
     # args = parser.parse_args('test.gnucash quotes.json '.split())
     args = parser.parse_args()
 
-    print(args)
+    # print(args)
     # print(parser.format_help())
     # print(args.gnucash_file)
     
