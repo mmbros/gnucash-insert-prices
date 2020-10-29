@@ -194,14 +194,34 @@ def do_insert_prices(book, quotes):
     #  Namespace: default ""
 
     errors = 0
+    row = 0
 
     for q in quotes:
+        row += 1
+
+        # check mandatory fields
+        msg = None
+        if ("isin" not in q) and ("name" not in q):
+            msg = "isin or name"
+        elif "price" not in q:
+            msg = "price"
+        elif "date" not in q:
+            msg = "date"
+        
+        if msg is not None:
+            qq = dict()
+            for k in q:
+                if k  in ["date", "price", "isin", "name", "source"]:
+                    qq[k] = q[k] 
+            print("IGN : {2} not found at row {0} {1}".format(row, qq, msg))
+            continue
+
         date = datetime.datetime.strptime(q["date"], '%Y-%m-%dT%H:%M:%S%z')
         isin = q.get("isin")
         fullname = q.get("name")
         namespace_name = q.get("namespace", "")
         currency_str = q.get("currency", "EUR")
-        price = q["price"]
+        price = q.get("price")
 
         try:
             c, added = add_price(
